@@ -3,7 +3,7 @@ from io import open
 from os import chdir
 from sys import path
 from sources.FarpostDictionaryScraper import *
-
+from datetime import date
 
 class FarpostCatalog(unittest.TestCase):
 
@@ -23,14 +23,13 @@ class FarpostCatalog(unittest.TestCase):
         # checked first one
         ad = ad_list[0]
         self.assertEqual(ad['firmTitle'], "Мой бизнес")
-        self.assertEqual(ad['renewDate'], )
-        self.assertEqual(ad['firmShortDesc'], """
-            Компания оказывает комплекс услуг по сопровождению бизнеса - регистрация ООО, ИП,
-            ликвидация, полное бухгалтерское сопровождение,
-             оценка работы бухгалтеров, ЭЦП для сдачи отчетности, 1С, CRM-системы управления
-              бизнесом, онлайн бизнес-консультации
-              """)
-        self.assertEqual(ad.siteCategory, "Бухгалтерско-юридическая компания")
-        self.assertEqual(ad.address, Address(region=25, city="Владивосток", left="пр-кт Красного Знамени, 59"))
+        self.assertEqual(ad['renewDate'], date(2016, 5, 30))
+        self.assertEqual(ad['firmShortDesc'], ('Компания оказывает комплекс услуг по сопровождению бизнеса - регистрация ООО, ИП, '
+            'ликвидация, полное бухгалтерское сопровождение, '
+            'оценка работы бухгалтеров, ЭЦП для сдачи отчетности, 1С, CRM-системы управления '
+            'бизнесом, онлайн бизнес-консультации.')
+                         )
+        self.assertEqual(ad['labeledCategory'], "Бухгалтерско-юридическая компания")
+        self.assertEqual(ad['address'], Address(region=25, city="Владивосток", left="пр-кт Красного Знамени, 59"))
 
 
