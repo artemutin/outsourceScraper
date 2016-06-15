@@ -30,6 +30,6 @@ class FarpostCatalog(unittest.TestCase):
             'бизнесом, онлайн бизнес-консультации.')
                          )
         self.assertEqual(ad['labeledCategory'], "Бухгалтерско-юридическая компания")
-        self.assertEqual(ad['address'], Address(region=25, city="Владивосток", left="пр-кт Красного Знамени, 59"))
+        self.assertEqual(ad['address'], {'region': 25, 'city': "Владивосток", 'rest': " пр-кт Красного Знамени, 59"})
 
 
