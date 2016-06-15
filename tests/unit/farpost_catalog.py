@@ -41,4 +41,14 @@ class FarpostCatalog(unittest.TestCase):
         for i in range(0, 30):
             self.assertEqual(ad_list[i]['renewDate'], dates[i])
 
+    def testCataloguePageParse(self):
+        # now test parse results for inner catalogue pages
+        f = open("../static/Мой бизнес_ отзывы, цены, фото, карта. Владивосток, Приморский край.html")
+        page = f.read()
+        f.close()
+
+        d = catalogue_page_parse(BeautifulSoup(page, 'html.parser'))
+        self.assertEqual(d, {'site': 'http://www.mybusinesson.pro', 'email': 'm.ivanov@mybusinesson.pro',
+                                             'phone': '+7(423) 206-00-42'})
+
 
