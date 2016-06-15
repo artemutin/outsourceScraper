@@ -38,7 +38,9 @@ class FarpostDictionaryScraper:
     @classmethod
     def __date_parse(cls, datestr):
         s = split(r'\W+', datestr)
-        return date(int(s[3]), 5, int(s[1]))
+        months = {'января': 1, "февраля": 2, "марта": 3, "апреля": 4, "мая": 5, "июня": 6, "июля": 7, "августа": 8,
+                  "сентября": 9, "ноября": 10, "октября": 11, "декабря": 12}
+        return date(int(s[3]), months.get(s[2]), int(s[1]))
 
     @classmethod
     def __adress_parse(cls, address):
