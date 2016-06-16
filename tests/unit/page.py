@@ -2,7 +2,7 @@ import unittest
 from io import open
 from os import chdir
 from sys import path
-from sources.Page import Page
+from sources.FarpostDictionaryScraper import CatalogPage
 
 
 class PageTest(unittest.TestCase):
@@ -15,7 +15,7 @@ class PageTest(unittest.TestCase):
 
     def testPage(self):
         # loaded page
-        page = Page('http://www.vl.ru/spravochnik')
+        page = CatalogPage('http://www.vl.ru/spravochnik')
         # it has a lot more to be showed
         self.assertTrue(page.num_pages > 10)
         # but it was only the first

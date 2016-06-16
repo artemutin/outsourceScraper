@@ -3,7 +3,9 @@ from io import open
 from os import chdir
 from sys import path
 from sources.FarpostDictionaryScraper import *
+from sources.Catalog import scrape_catalog
 from datetime import date
+import pdb
 
 
 class FarpostCatalog(unittest.TestCase):
@@ -55,5 +57,12 @@ class FarpostCatalog(unittest.TestCase):
         d = catalogue_page_parse(BeautifulSoup(page, 'html.parser'))
         self.assertEqual(d, {'site': 'http://www.mybusinesson.pro', 'email': 'm.ivanov@mybusinesson.pro',
                                              'phone': '+7(423) 206-00-42'})
+
+    def ittestfullCatalogScrape(self):
+        # ask to parse all catalogue
+        results = scrape_catalog('vl', category='Бухгалтерия')
+
+        # ALERT: this test is unstable by definition
+        self.assertEqual(len(results), 5*30 + 4)
 
 

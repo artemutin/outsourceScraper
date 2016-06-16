@@ -3,6 +3,8 @@ from re import split
 from datetime import date
 from functools import partial
 
+from sources.Page import BasePage
+
 
 class FarpostDictionaryScraper:
 
@@ -70,3 +72,24 @@ def catalogue_page_parse(page_soup):
     d['site'] = tostr(search(info, 'website').a.string)
 
     return d
+
+
+class CatalogPage(BasePage):
+    def __init__(self, url):
+        super().__init__(url)
+
+        self._bs = BeautifulSoup(self.page, 'html.parser')
+        num = self._bs.find('a', id='link-last')
+        if num:
+            self.num_pages = int(num.text)
+        else:
+            self.num_pages = 1
+
+        self.page_num = int(self._bs.find('li', class_='current').text)
+
+    def go_next(self):
+        if self.num_pages > self.page_num:
+            self.__init__(self._bs.find('li', class_='current').next_sibling.a['href'])
+            return self
+        else:
+            return None
