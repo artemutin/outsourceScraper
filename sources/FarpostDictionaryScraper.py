@@ -1,8 +1,7 @@
 from bs4 import BeautifulSoup
-from re import split,match
+from re import split
 from datetime import date
 from functools import partial
-import urllib.request
 
 
 class FarpostDictionaryScraper:
@@ -17,6 +16,7 @@ class FarpostDictionaryScraper:
             self.__read_ads()
 
         return self._ads
+
 
     def __read_ads(self):
         self._ads = []

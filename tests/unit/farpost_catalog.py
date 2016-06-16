@@ -5,6 +5,7 @@ from sys import path
 from sources.FarpostDictionaryScraper import *
 from datetime import date
 
+
 class FarpostCatalog(unittest.TestCase):
 
     def setUp(self):
@@ -41,6 +42,9 @@ class FarpostCatalog(unittest.TestCase):
                  date(2016,6,7),date(2016,6,3),date(2016,5,30),date(2016,5,27)]
         for i in range(0, 30):
             self.assertEqual(ad_list[i]['renewDate'], dates[i])
+
+    def testMultiplePages(self):
+        scraper = FarpostDictionaryScraper(self.page)
 
     def testCataloguePageParse(self):
         # now test parse results for inner catalogue pages
