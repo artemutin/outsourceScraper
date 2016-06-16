@@ -5,7 +5,7 @@ from sys import path
 from sources.FarpostDictionaryScraper import *
 from sources.Catalog import scrape_catalog
 from datetime import date
-import pdb
+import logging
 
 
 class FarpostCatalog(unittest.TestCase):
@@ -58,7 +58,22 @@ class FarpostCatalog(unittest.TestCase):
         self.assertEqual(d, {'site': 'http://www.mybusinesson.pro', 'email': 'm.ivanov@mybusinesson.pro',
                                              'phone': '+7(423) 206-00-42'})
 
-    def ittestfullCatalogScrape(self):
+    def testCatalogPage(self):
+        # loaded page
+        page = CatalogPage('http://www.vl.ru/spravochnik')
+        # it has a lot more to be showed
+        self.assertTrue(page.num_pages > 10)
+        # but it was only the first
+        self.assertEqual(page.page_num, 1)
+
+        page.go_next()
+        # but it was only the first
+        self.assertEqual(page.page_num, 2)
+        # check true url
+        self.assertEqual(page.url, 'http://www.vl.ru/spravochnik?page=2')
+
+    def testfullCatalogScrape(self):
+        logging.info('IN test')
         # ask to parse all catalogue
         results = scrape_catalog('vl', category='Бухгалтерия')
 
