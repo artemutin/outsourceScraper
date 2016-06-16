@@ -26,6 +26,7 @@ class FarpostDictionaryScraper:
 
             info = find("company__info")
             d['firmTitle'] = tostr(info.header.h4.a.string)
+            d['catalogURL'] = tostr(info.header.h4.a['href'])
             d['labeledCategory'] = tostr(find("company__activity-type").string)
 
             info = find("company__side")

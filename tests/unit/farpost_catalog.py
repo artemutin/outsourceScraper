@@ -31,6 +31,7 @@ class FarpostCatalog(unittest.TestCase):
                          )
         self.assertEqual(ad['labeledCategory'], "Бухгалтерско-юридическая компания")
         self.assertEqual(ad['address'], {'region': 25, 'city': "Владивосток", 'rest': " пр-кт Красного Знамени, 59"})
+        self.assertEqual(ad['catalogURL'], 'http://www.vl.ru/mybusinesson')
 
         # checked all dates, just in case
         dates = [date(2016, 5, 30), date(2016, 4, 17), date(2016, 4, 24), date(2016, 6, 1), date(2016, 3, 23), date(2016, 4, 22),
