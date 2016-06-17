@@ -49,6 +49,13 @@ def tostr(s):
     return str(s).strip('\n\t\ ')
 
 
+def toint(s):
+    if s:
+        return int(s)
+    else:
+        return None
+
+
 def date_parse(datestr):
     s = split(r'\W+', datestr)
     months = {'января': 1, "февраля": 2, "марта": 3, "апреля": 4, "мая": 5, "июня": 6, "июля": 7, "августа": 8,
@@ -75,15 +82,29 @@ def catalogue_page_parse(page_soup):
 
 
 class CatalogPage(BasePage):
-    def __init__(self, url):
-        super().__init__(url)
+    def __init__(self, url, is_url_page = False):
+        if not is_url_page:
+            super().__init__(url)
+        else:
+            self.page = url
+            self.url = None
 
         self._bs = BeautifulSoup(self.page, 'html.parser')
         num = self._bs.find('a', id='link-last')
         if num:
             self.num_pages = int(num.text)
+            # this happens only if pager has many links and ...
         else:
-            self.num_pages = 1
+            last_li = self._bs.find('ul', class_='pager-list').find_all('li')[-1]
+            if last_li.a:
+                s = last_li.a.string
+            else:
+                s = last_li.string
+            num = toint(s)
+            if num:
+                self.num_pages = num
+            else:
+                self.num_pages = 1
 
         self.page_num = int(self._bs.find('li', class_='current').text)
 

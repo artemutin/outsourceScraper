@@ -59,6 +59,12 @@ class FarpostCatalog(unittest.TestCase):
                                              'phone': '+7(423) 206-00-42'})
 
     def testCatalogPage(self):
+        # fake local page
+        page = CatalogPage(self.page, True)
+        self.assertEqual(page.num_pages, 6)
+        # but it was only the first
+        self.assertEqual(page.page_num, 1)
+
         # loaded page
         page = CatalogPage('http://www.vl.ru/spravochnik')
         # it has a lot more to be showed
