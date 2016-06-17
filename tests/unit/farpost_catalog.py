@@ -5,6 +5,7 @@ from sys import path
 from sources.FarpostDictionaryScraper import *
 from sources.Catalog import scrape_catalog
 from datetime import date
+import re
 import logging
 
 
@@ -60,7 +61,7 @@ class FarpostCatalog(unittest.TestCase):
 
     def testCatalogPage(self):
         # fake local page
-        page = CatalogPage(self.page, True)
+        page = CatalogPage(self.page, is_url_page=True)
         self.assertEqual(page.num_pages, 6)
         # but it was only the first
         self.assertEqual(page.page_num, 1)
@@ -100,4 +101,19 @@ class FarpostCatalog(unittest.TestCase):
                 self.assertEqual(ad['email'], 'kompass.dv@mail.ru')
                 self.assertEqual(ad['phone'], '+7(423) 250-85-21')
                 self.assertEqual(ad['site'], 'http://www.business-office.ru')
+
+    def testPageRequest(self):
+        # asked a search request
+        page = CatalogPage('http://www.vl.ru/spravochnik', request='аутсорсинг')
+        self.assertTrue(page.num_pages > 1)
+
+        scraper = FarpostDictionaryScraper(page.page)
+        item_page = BasePage(scraper.ads[0]['catalogURL'])
+        text = str(BeautifulSoup(item_page.page, 'html.parser').get_text())
+        s = re.findall('аутсорсинг',
+                      text,
+                      re.IGNORECASE
+                      )
+        self.assertTrue(len(s) > 0)
+
 

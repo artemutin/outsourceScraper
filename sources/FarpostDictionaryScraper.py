@@ -99,7 +99,10 @@ def catalogue_page_parse(page_soup):
 
 
 class CatalogPage(BasePage):
-    def __init__(self, url, is_url_page = False):
+    def __init__(self, url, request = None, is_url_page = False):
+        if request:
+            url += '?search={}'.format(request)
+
         if not is_url_page:
             super().__init__(url)
         else:
