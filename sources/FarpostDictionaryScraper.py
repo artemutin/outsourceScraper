@@ -8,19 +8,21 @@ from sources.Page import BasePage
 
 class FarpostDictionaryScraper:
 
-    def __init__(self, page):
+    def __init__(self, page, scrape_details = False):
         self.soup = BeautifulSoup(page, 'html.parser')
         self._ads = None
+        self.scrape_details = scrape_details
 
     @property
     def ads(self):
         if self._ads is None:
             self.__read_ads()
-
+            if self.scrape_details:
+                self.__scrape_details()
         return self._ads
 
 
-    def __read_ads(self):
+    def __read_ads(self)->None:
         self._ads = []
         for ad in self.soup.find_all("div", class_="company"):
             d = dict()
@@ -40,8 +42,14 @@ class FarpostDictionaryScraper:
 
             self._ads.append(d)
 
+    def __scrape_details(self):
+        for ad in self._ads:
+            page = BasePage(ad['catalogURL'])
+            soup = BeautifulSoup(page.page, 'html.parser')
+            ad.update(catalogue_page_parse(soup))
 
-def search(soup, class_):
+
+def search(soup: BeautifulSoup, class_: str):
     return soup.find('div', class_)
 
 
@@ -72,11 +80,20 @@ def catalogue_page_parse(page_soup):
     d = dict()
     find = partial(search, page_soup)
     info = find("address-phones")
-    d['phone'] = tostr(info.div.span.string)
+    try:
+        d['phone'] = tostr(info.div.span.string)
+    except AttributeError:
+        d['phone'] = ''
 
     info = find("row contacts")
-    d['email'] = tostr(search(info, 'email').a.string)
-    d['site'] = tostr(search(info, 'website').a.string)
+    try:
+        d['email'] = tostr(search(info, 'email').a.string)
+    except AttributeError:
+        d['email'] = ''
+    try:
+        d['site'] = tostr(search(info, 'website').a.string)
+    except AttributeError:
+        d['site'] = ''
 
     return d
 

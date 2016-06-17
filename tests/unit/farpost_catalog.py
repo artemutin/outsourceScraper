@@ -86,4 +86,18 @@ class FarpostCatalog(unittest.TestCase):
         # ALERT: this test is unstable by definition
         self.assertEqual(len(results), 5*30 + 4)
 
+    def testDetailedInfoLoad(self):
+        scraper = FarpostDictionaryScraper(self.page, True)
+        for ad in scraper.ads:
+            logging.info(ad)
+            self.assertIsNotNone(ad['email'])
+            self.assertIsNotNone(ad['phone'])
+            self.assertIsNotNone(ad['site'])
+
+        # check concrete ad
+        for ad in scraper.ads:
+            if ad['catalogURL'] == 'http://www.vl.ru/kompas-dv':
+                self.assertEqual(ad['email'], 'kompass.dv@mail.ru')
+                self.assertEqual(ad['phone'], '+7(423) 250-85-21')
+                self.assertEqual(ad['site'], 'http://www.business-office.ru')
 
