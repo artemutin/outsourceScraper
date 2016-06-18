@@ -3,6 +3,7 @@ from typing import List
 from re import split
 from functools import partial
 from math import ceil
+from urllib.request import unquote
 
 from sources.Page import BasePage
 from sources.utils import cities
@@ -72,11 +73,13 @@ def search(soup: BeautifulSoup, class_: str, elem='div'):
 def tostr(s):
     return str(s).strip('\n\t\ ').replace(u'\xa0', u' ')
 
+
 def toint(s):
     if s:
         return int(s)
     else:
         return None
+
 
 def catalogue_page_parse(page_soup):
     d = dict()
@@ -105,6 +108,7 @@ class CatalogPage(BasePage):
 
         if not is_url_page:
             super().__init__(url)
+            self.url = unquote(split(r'\?', url)[0]) + '/'
             # get name of the city
             city = split(r'/', url)[3]
             self.city = ''

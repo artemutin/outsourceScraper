@@ -8,7 +8,7 @@ from sources.Page import BasePage
 
 class FarpostDictionaryScraper:
 
-    def __init__(self, page, scrape_details = False):
+    def __init__(self, page, scrape_details = False, **kwargs):
         self.soup = BeautifulSoup(page, 'html.parser')
         self._ads = None
         self.scrape_details = scrape_details

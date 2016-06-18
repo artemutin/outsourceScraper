@@ -77,12 +77,12 @@ class FarpostCatalog(unittest.TestCase):
         # but it was only the first
         self.assertEqual(page.page_num, 2)
         # check true url
-        self.assertEqual(page.url, 'http://www.vl.ru/spravochnik/2')
+        self.assertEqual(page.url, 'http://www.vl.ru/spravochnik?page=2')
 
     def testfullCatalogScrape(self):
         logging.info('IN test')
         # ask to parse all catalogue
-        results = scrape_catalog('vl', category='Бухгалтерия')
+        results = scrape_catalog('vl', category='Бухгалтерия', city='Владивосток')
 
         # ALERT: this test is unstable by definition
         self.assertEqual(len(results), 5*30 + 4)
