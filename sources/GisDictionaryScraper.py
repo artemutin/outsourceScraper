@@ -46,6 +46,9 @@ class GisDictionaryScraper:
             info = search(ad, "miniCard__address", 'span')
             d['address'] = {'region': self._region, 'city': self._city, 'rest': tostr(info.string) }
 
+            if ad.find('div', attrs = {'data-adv': 'реклама'}):
+                d['promoted'] = True
+
             self._ads.append(d)
 
     def __scrape_details(self):
@@ -61,3 +64,19 @@ def search(soup: BeautifulSoup, class_: str, elem='div'):
 
 def tostr(s):
     return str(s).strip('\n\t\ ').replace(u'\xa0', u' ')
+
+
+def catalogue_page_parse(page_soup):
+    d = dict()
+    try:
+        d['phone'] = tostr(page_soup.find('a', class_='contact__phonesItemLink').span.string)
+    except Exception:
+        d['phone'] = ''
+
+    d['email'] = ''
+    try:
+        d['site'] = tostr(page_soup.find('a', class_='link contact__linkText')['href'])
+    except AttributeError:
+        d['site'] = ''
+
+    return d

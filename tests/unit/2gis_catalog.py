@@ -33,3 +33,18 @@ class GisCatalog(unittest.TestCase):
         # self.assertEqual(ad['labeledCategory'], "Бухгалтерские услуги")
         self.assertEqual(ad['address'], {'region': 27, 'city': "Хабаровск", 'rest': "Ленина, 4"})
         self.assertEqual(ad['catalogURL'], 'https://2gis.ru/khabarovsk/firm/4926340373601068?queryState=center%2F135.065287%2C48.466025%2Fzoom%2F17')
+        # it is promoted
+        self.assertEqual(ad['promoted'], True)
+
+    def testDetailedInfoLoad(self):
+        # scrape of detailed info
+        scraper = GisDictionaryScraper(self.page, 'Хабаровск', 27, True)
+        for ad in scraper.ads:
+            logging.info(ad)
+            # email is hidden even for registered user
+            self.assertIsNotNone(ad['email'])
+            self.assertTrue(ad['email'] == '')
+            self.assertIsNotNone(ad['phone'])
+            self.assertTrue(ad['phone'] == '' or re.match(r'[\d\ \(\)\+]+', ad['phone']))
+            self.assertIsNotNone(ad['site'])
+            self.assertTrue(ad['site'] == '' or re.search(r'http', ad['site']))
