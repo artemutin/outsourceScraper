@@ -5,7 +5,8 @@ from functools import partial
 from math import ceil
 
 from sources.Page import BasePage
-from sources.Catalog import cities
+from sources.utils import cities
+
 
 class GisDictionaryScraper:
 

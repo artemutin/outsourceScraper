@@ -73,3 +73,11 @@ class GisCatalog(unittest.TestCase):
         # check true url
         self.assertEqual(page.url, 'https://2gis.ru/khabarovsk/search/Бухгалтерские услуги/page/2/')
 
+    def testfullCatalogScrape(self):
+        logging.info('IN test')
+        # ask to parse all catalogue
+        results = scrape_catalog('2gis', category='Бухгалтерия', city='Хабаровск')
+
+        # ALERT: this test is unstable by definition
+        self.assertEqual(len(results), 152)
+
