@@ -77,7 +77,7 @@ class FarpostCatalog(unittest.TestCase):
         # but it was only the first
         self.assertEqual(page.page_num, 2)
         # check true url
-        self.assertEqual(page.url, 'http://www.vl.ru/spravochnik?page=2')
+        self.assertEqual(page.url, 'http://www.vl.ru/spravochnik/2')
 
     def testfullCatalogScrape(self):
         logging.info('IN test')

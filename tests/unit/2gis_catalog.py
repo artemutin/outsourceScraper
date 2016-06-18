@@ -41,6 +41,7 @@ class GisCatalog(unittest.TestCase):
         scraper = GisDictionaryScraper(self.page, 'Хабаровск', 27, True)
         for ad in scraper.ads:
             logging.info(ad)
+            print("IN")
             # email is hidden even for registered user
             self.assertIsNotNone(ad['email'])
             self.assertTrue(ad['email'] == '')
@@ -48,3 +49,27 @@ class GisCatalog(unittest.TestCase):
             self.assertTrue(ad['phone'] == '' or re.match(r'[\d\ \(\)\+]+', ad['phone']))
             self.assertIsNotNone(ad['site'])
             self.assertTrue(ad['site'] == '' or re.search(r'http', ad['site']))
+            if 'promoted' in ad.keys():
+                self.assertIsNotNone(len(ad['firmAdvertisement']))
+
+    def testCatalogPage(self):
+        # fake local page
+        page = CatalogPage(self.page, is_url_page=True)
+        self.assertEqual(page.num_pages, 13)
+        # but it was only the first
+        self.assertEqual(page.page_num, 1)
+
+        # loaded page
+        page = CatalogPage('https://2gis.ru/khabarovsk/search/', 'Бухгалтерские услуги')
+        self.assertEqual(page.city, 'Хабаровск')
+        # it has a lot more to be showed
+        self.assertTrue(page.num_pages > 10)
+        # but it was only the first
+        self.assertEqual(page.page_num, 1)
+
+        page.go_next()
+        # but it was only the first
+        self.assertEqual(page.page_num, 2)
+        # check true url
+        self.assertEqual(page.url, 'https://2gis.ru/khabarovsk/search/Бухгалтерские услуги/page/2/')
+

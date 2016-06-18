@@ -5,6 +5,10 @@ catalogs = {
     'vl': {'Бухгалтерия': 'http://www.vl.ru/business/services-for-business/accountancy'}
 }
 
+cities = {
+    'Хабаровск': 'khabarovsk'
+}
+
 
 def scrape_catalog(catalog, category):
 
