@@ -85,7 +85,7 @@ class FarpostCatalog(unittest.TestCase):
         results = scrape_catalog('vl', category='Бухгалтерия', city='Владивосток')
 
         # ALERT: this test is unstable by definition
-        self.assertEqual(len(results), 5*30 + 4)
+        self.assertEqual(len(results), 7*30 + 12)
 
     def testDetailedInfoLoad(self):
         scraper = FarpostDictionaryScraper(CatalogPage(self.page, is_url_page=True), True)

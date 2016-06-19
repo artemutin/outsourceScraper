@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from re import split
 from datetime import date
 from functools import partial
+import requests
 import logging
 
 from sources.Page import BasePage
@@ -37,20 +38,25 @@ class FarpostDictionaryScraper:
                 find = partial(search, ad)
 
                 info = find("company__info")
+                if not info:
+                    logging.warning('Could not find company info')
                 d['firmTitle'] = tostr(info.header.h4.a.string)
                 d['catalogURL'] = tostr(info.header.h4.a['href'])
-                d['labeledCategory'] = tostr(find("company__activity-type").string)
+                act_type = find("company__activity-type")
+                if act_type:
+                    d['labeledCategory'] = tostr(act_type.string)
 
                 info = find("company__side")
                 d['renewDate'] = date_parse(info.div.string)
 
                 info = find("company__details")
-                d['firmShortDesc'] = tostr(info.div.string)
+                if info.div:
+                    d['firmShortDesc'] = tostr(info.div.string)
                 d['address'] = adress_parse(tostr(find('contacts').div.get_text()))
 
                 self._ads.append(d)
             except Exception as e:
-                logging.error('Scraping of url={} failed with {}', self._url, str(e))
+                logging.error('Scraping of url={} failed with {}'.format(self._url, str(e)))
 
         logging.info('Finished scraping ads: url={}'.format(self._url))
 
@@ -62,7 +68,7 @@ class FarpostDictionaryScraper:
                 soup = BeautifulSoup(page.page, 'html.parser')
                 ad.update(catalogue_page_parse(soup))
             except Exception as e:
-                logging.error('Scraping of details for url={} failed with {}', ad['catalogURL'], str(e))
+                logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)) )
 
         logging.info('Finished scraping detailed ads: url={}'.format(self._url))
 
@@ -116,13 +122,16 @@ def catalogue_page_parse(page_soup):
     return d
 
 
+FULL_CATALOG_URL = 'http://www.vl.ru/main/0/'
+
+
 class CatalogPage(BasePage):
     def __init__(self, url, request = None, is_url_page = False):
         if request:
             url += '?search={}'.format(request)
 
         if not is_url_page:
-            super().__init__(url)
+            super().__init__(url, cookies={'city': '0'})
         else:
             self.page = url
             self.url = None

@@ -62,7 +62,7 @@ class GisDictionaryScraper:
 
                 self._ads.append(d)
             except Exception as e:
-                logging.error('Scraping of url={} failed with {}', self._url, str(e))
+                logging.error('Scraping of url={} failed with {}'.format( self._url, str(e)) )
 
         logging.info('Finished scraping ads: url={}'.format(self._url))
 
@@ -79,7 +79,7 @@ class GisDictionaryScraper:
 
                 ad.update(catalogue_page_parse(soup))
             except Exception as e:
-                logging.error('Scraping of details for url={} failed with {}', ad['catalogURL'], str(e))
+                logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
 
         logging.info('Finished scraping detailed ads: url={}'.format(self._url))
 
