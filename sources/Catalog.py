@@ -2,12 +2,16 @@ import sources.FarpostDictionaryScraper as F
 import sources.GisDictionaryScraper as G
 from logging import info
 from typing import List
+from re import sub
 from sources.utils import catalogs, cities
 
 
 def scrape_catalog(catalog: str, category: str, city: str)->List[dict]:
     if catalog == 'vl':
-        pages = map(F.CatalogPage, catalogs.get(catalog).get(category))
+        urls = catalogs.get(catalog).get(category)
+        if city == 'Хабаровск':
+            urls = map(lambda x: sub(".*\.ru", "http://www.dvhab.ru/", x), urls)
+        pages = map(F.CatalogPage, urls)
         Sc = F.FarpostDictionaryScraper
     elif catalog == '2gis':
         pages = map(lambda cat: G.CatalogPage('https://2gis.ru/{city}/{category}'.format(city=cities.get(city),
