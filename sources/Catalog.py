@@ -13,12 +13,12 @@ from sources.utils import catalogs, cities
 def for_fut(Sc, city, page):
     ads = []
     i = 1
-    while True:
+    while i !=2:
         info('parsing page {}'.format(i))
         scraper = Sc(page=page, city=city, region=27)
         # print(page.page)
         ads.extend(scraper.ads)
-        page = page.go_next()
+        #page = page.go_next()
         i += 1
         if not page: break
 
@@ -31,11 +31,11 @@ def scrape_catalog(catalog: str, category: str, city: str)->List[dict]:
         if city == 'Хабаровск':
             urls = map(lambda x: sub(".*\.ru", "http://www.dvhab.ru", x), urls)
         pages = map(F.CatalogPage, urls)
-        Sc = partial(F.FarpostDictionaryScraper, keywords={'scrape_details': True})
+        Sc = partial(F.FarpostDictionaryScraper, scrape_details = True)
     elif catalog == '2gis':
         pages = map(lambda cat: G.CatalogPage('https://2gis.ru/{city}/{category}'.format(city=cities.get(city),
                                                                       category=cat)), catalogs.get(catalog).get(category))
-        Sc = partial(G.GisDictionaryScraper, keywords={'scrape_details': True})
+        Sc = partial(G.GisDictionaryScraper, scrape_details=True)
 
     ads = []
     with fut.ThreadPoolExecutor(max_workers=4) as executor:
@@ -62,14 +62,31 @@ def unzip_dict(d: dict):
 
 def full_scrape(out_file: str)->None:
     with open(out_file, 'w') as csvfile:
-        field_names = ['firmTitle', 'catalogURL', 'labeledCategory', 'category', 'renewDate', 'firmShortDesc',
-                       'phone', 'email', 'site', 'region', 'city', 'rest', 'promoted', 'firmAdvertisement']
+        field_names = ['firmTitle', 'catalogURL', 'labeledCategory', 'category', 'firmShortDesc', 'site',
+                       'renewDate', 'clicks', 'promoted', 'firmAdvertisement', 'phone', 'email', 'region', 'city', 'rest']
         writer = csv.DictWriter(csvfile, field_names)
+        writer.writeheader()
         # Farpost scrape
-        for cat in catalogs['vl'].keys():
+        for cat in catalogs['vl']:
             for city in ['Владивосток', 'Хабаровск']:
-                ads = scrape_catalog('vl', cat, city)
-                ads = map(unzip_dict, ads)
-                map(lambda ad: ad.update({'category': cat}), ads)
-                writer.writeheader()
+                ads = list(scrape_catalog('vl', cat, city))
+                for ad in ads:
+                    ad = unzip_dict(ad)
+                    ad.update({'category': cat})
+                    if city == 'Хабаровск':
+                        ad.update({'region': 27})
+
+                writer.writerows(ads)
+
+        # 2gis
+
+        for cat in catalogs['vl']:
+            for city in ['Владивосток', 'Хабаровск']:
+                ads = list(scrape_catalog('vl', cat, city))
+                for ad in ads:
+                    ad = unzip_dict(ad)
+                    ad.update({'category': cat})
+                    if city == 'Хабаровск':
+                        ad.update({'region': 27})
+
                 writer.writerows(ads)

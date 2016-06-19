@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from re import split
 from datetime import date
 from functools import partial
-import requests
+import concurrent.futures as Fut
 import logging
 
 from sources.Page import BasePage
@@ -68,15 +68,20 @@ class FarpostDictionaryScraper:
 
     def __scrape_details(self):
         logging.info('Started scraping detailed ads: url={}'.format(self._url))
-        for ad in self._ads:
-            try:
-                page = BasePage(ad['catalogURL'])
-                soup = BeautifulSoup(page.page, 'html.parser')
-                ad.update(catalogue_page_parse(soup))
-            except Exception as e:
-                logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)) )
+        with Fut.ThreadPoolExecutor(15) as executor:
+            self._ads = executor.map(scrape_details_mapper, self._ads)
 
         logging.info('Finished scraping detailed ads: url={}'.format(self._url))
+
+
+def scrape_details_mapper(ad):
+    try:
+        page = BasePage(ad['catalogURL'])
+        soup = BeautifulSoup(page.page, 'html.parser')
+        ad.update(catalogue_page_parse(soup))
+        return ad
+    except Exception as e:
+        logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
 
 
 def search(soup: BeautifulSoup, class_: str):
@@ -159,9 +164,12 @@ class CatalogPage(BasePage):
                     self.num_pages = num
                 else:
                     self.num_pages = 1
+
             except Exception:
                 logging.warning('Pager parse error on url={}'.format(url))
                 self.num_pages = 1
+                self.page_num = 1
+                return
 
         self.page_num = int(self._bs.find('li', class_='current').text)
 
