@@ -54,6 +54,12 @@ class FarpostDictionaryScraper:
                     d['firmShortDesc'] = tostr(info.div.string)
                 d['address'] = adress_parse(tostr(find('contacts').div.get_text()))
 
+                info = ad.find('span', class_='count')
+                if info:
+                    d['clicks'] = toint(tostr(info.string))
+                else:
+                    d['clicks'] = None
+
                 self._ads.append(d)
             except Exception as e:
                 logging.error('Scraping of url={} failed with {}'.format(self._url, str(e)))
@@ -142,15 +148,19 @@ class CatalogPage(BasePage):
             self.num_pages = int(num.text)
             # this happens only if pager has many links and ...
         else:
-            last_li = self._bs.find('ul', class_='pager-list').find_all('li')[-1]
-            if last_li.a:
-                s = last_li.a.string
-            else:
-                s = last_li.string
-            num = toint(s)
-            if num:
-                self.num_pages = num
-            else:
+            try:
+                last_li = self._bs.find('ul', class_='pager-list').find_all('li')[-1]
+                if last_li.a:
+                    s = last_li.a.string
+                else:
+                    s = last_li.string
+                num = toint(s)
+                if num:
+                    self.num_pages = num
+                else:
+                    self.num_pages = 1
+            except Exception:
+                logging.warning('Pager parse error on url={}'.format(url))
                 self.num_pages = 1
 
         self.page_num = int(self._bs.find('li', class_='current').text)
