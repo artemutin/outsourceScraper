@@ -2,16 +2,22 @@ from bs4 import BeautifulSoup
 from re import split
 from datetime import date
 from functools import partial
+import logging
 
 from sources.Page import BasePage
 
 
+class CatalogPage(BasePage):
+    pass
+
+
 class FarpostDictionaryScraper:
 
-    def __init__(self, page, scrape_details = False, **kwargs):
-        self.soup = BeautifulSoup(page, 'html.parser')
+    def __init__(self, page: CatalogPage, scrape_details = False, **kwargs):
+        self.soup = BeautifulSoup(page.page, 'html.parser')
         self._ads = None
         self.scrape_details = scrape_details
+        self._url = page.url
 
     @property
     def ads(self):
@@ -24,29 +30,41 @@ class FarpostDictionaryScraper:
 
     def __read_ads(self)->None:
         self._ads = []
+        logging.info('Started scraping detailed ads: url={}'.format(self._url))
         for ad in self.soup.find_all("div", class_="company"):
-            d = dict()
-            find = partial(search, ad)
+            try:
+                d = dict()
+                find = partial(search, ad)
 
-            info = find("company__info")
-            d['firmTitle'] = tostr(info.header.h4.a.string)
-            d['catalogURL'] = tostr(info.header.h4.a['href'])
-            d['labeledCategory'] = tostr(find("company__activity-type").string)
+                info = find("company__info")
+                d['firmTitle'] = tostr(info.header.h4.a.string)
+                d['catalogURL'] = tostr(info.header.h4.a['href'])
+                d['labeledCategory'] = tostr(find("company__activity-type").string)
 
-            info = find("company__side")
-            d['renewDate'] = date_parse(info.div.string)
+                info = find("company__side")
+                d['renewDate'] = date_parse(info.div.string)
 
-            info = find("company__details")
-            d['firmShortDesc'] = tostr(info.div.string)
-            d['address'] = adress_parse(tostr(find('contacts').div.get_text()))
+                info = find("company__details")
+                d['firmShortDesc'] = tostr(info.div.string)
+                d['address'] = adress_parse(tostr(find('contacts').div.get_text()))
 
-            self._ads.append(d)
+                self._ads.append(d)
+            except Exception as e:
+                logging.error('Scraping of url={} failed with {}', self._url, str(e))
+
+        logging.info('Finished scraping ads: url={}'.format(self._url))
 
     def __scrape_details(self):
+        logging.info('Started scraping detailed ads: url={}'.format(self._url))
         for ad in self._ads:
-            page = BasePage(ad['catalogURL'])
-            soup = BeautifulSoup(page.page, 'html.parser')
-            ad.update(catalogue_page_parse(soup))
+            try:
+                page = BasePage(ad['catalogURL'])
+                soup = BeautifulSoup(page.page, 'html.parser')
+                ad.update(catalogue_page_parse(soup))
+            except Exception as e:
+                logging.error('Scraping of details for url={} failed with {}', ad['catalogURL'], str(e))
+
+        logging.info('Finished scraping detailed ads: url={}'.format(self._url))
 
 
 def search(soup: BeautifulSoup, class_: str):

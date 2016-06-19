@@ -4,19 +4,25 @@ from re import split
 from functools import partial
 from math import ceil
 from urllib.request import unquote
+import logging
 
 from sources.Page import BasePage
 from sources.utils import cities
 
 
+class CatalogPage(BasePage):
+    pass
+
+
 class GisDictionaryScraper:
 
-    def __init__(self, page: str, city: str, region: int, scrape_details = False ):
-        self.soup = BeautifulSoup(page, 'html.parser')
+    def __init__(self, page: CatalogPage, city: str, region: int, scrape_details = False ):
+        self.soup = BeautifulSoup(page.page, 'html.parser')
         self._ads = get_empty_dictlist()
         self.scrape_details = scrape_details
         self._city = city
         self._region = region
+        self._url = page.url
 
     @property
     def ads(self)->List[dict]:
@@ -28,42 +34,54 @@ class GisDictionaryScraper:
 
     def __read_ads(self)->None:
         self._ads = []
+        logging.info('Started scraping ads: url={}'.format(self._url))
         for ad in self.soup.find_all("article", class_="miniCard"):
-            d = dict()
+            try:
+                d = dict()
 
-            find = partial(search, ad)
+                find = partial(search, ad)
 
-            info = search(ad, "miniCard__headerTitle", 'h3')
-            d['firmTitle'] = tostr(info.a.string)
-            d['catalogURL'] = tostr(info.a['href'])
-            d['renewDate'] = None
-            d['labeledCategory'] = None
+                info = search(ad, "miniCard__headerTitle", 'h3')
+                d['firmTitle'] = tostr(info.a.string)
+                d['catalogURL'] = tostr(info.a['href'])
+                d['renewDate'] = None
+                d['labeledCategory'] = None
 
-            d['renewDate'] = None
+                d['renewDate'] = None
 
-            info = search(ad, "miniCard__micro")
-            if info:
-                d['firmShortDesc'] = tostr(info.string)
-            else:
-                d['firmShortDesc'] = ''
-            info = search(ad, "miniCard__address", 'span')
-            d['address'] = {'region': self._region, 'city': self._city, 'rest': tostr(info.string) }
+                info = search(ad, "miniCard__micro")
+                if info:
+                    d['firmShortDesc'] = tostr(info.string)
+                else:
+                    d['firmShortDesc'] = ''
+                info = search(ad, "miniCard__address", 'span')
+                d['address'] = {'region': self._region, 'city': self._city, 'rest': tostr(info.string) }
 
-            if ad.find('div', attrs = {'data-adv': 'реклама'}):
-                d['promoted'] = True
+                if ad.find('div', attrs = {'data-adv': 'реклама'}):
+                    d['promoted'] = True
 
-            self._ads.append(d)
+                self._ads.append(d)
+            except Exception as e:
+                logging.error('Scraping of url={} failed with {}', self._url, str(e))
+
+        logging.info('Finished scraping ads: url={}'.format(self._url))
 
     def __scrape_details(self)->None:
+        logging.info('Started scraping detailed ads: url={}'.format(self._url))
         for ad in self._ads:
-            page = BasePage(ad['catalogURL'])
-            soup = BeautifulSoup(page.page, 'html.parser')
-            if ad.get('promoted', False):
-                page = BasePage(soup.find('a', class_='firmCard__adsText')['href'])
+            try:
+                page = BasePage(ad['catalogURL'])
                 soup = BeautifulSoup(page.page, 'html.parser')
-                ad['firmAdvertisement'] = soup.find('div', class_='articleCard__content').get_text()
+                if ad.get('promoted', False):
+                    page = BasePage(soup.find('a', class_='firmCard__adsText')['href'])
+                    soup = BeautifulSoup(page.page, 'html.parser')
+                    ad['firmAdvertisement'] = soup.find('div', class_='articleCard__content').get_text()
 
-            ad.update(catalogue_page_parse(soup))
+                ad.update(catalogue_page_parse(soup))
+            except Exception as e:
+                logging.error('Scraping of details for url={} failed with {}', ad['catalogURL'], str(e))
+
+        logging.info('Finished scraping detailed ads: url={}'.format(self._url))
 
 
 def search(soup: BeautifulSoup, class_: str, elem='div'):

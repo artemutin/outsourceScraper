@@ -18,7 +18,7 @@ def scrape_catalog(catalog: str, category: str, city: str)->List[dict]:
     i = 1
     while True:
         info('parsing page {}'.format(i))
-        scraper = Sc(page.page, city=city, region=27)
+        scraper = Sc(page, city=city, region=27)
         # print(page.page)
         ads.extend(scraper.ads)
         i += 1

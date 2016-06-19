@@ -19,7 +19,7 @@ class FarpostCatalog(unittest.TestCase):
 
     def testStatic(self):
         # created scraper from preloaded page
-        scraper = FarpostDictionaryScraper(self.page)
+        scraper = FarpostDictionaryScraper(CatalogPage(self.page, is_url_page=True) )
         ad_list = scraper.ads
         # read all ads from page
         self.assertEqual(len(ad_list), 30)
@@ -47,7 +47,7 @@ class FarpostCatalog(unittest.TestCase):
             self.assertEqual(ad_list[i]['renewDate'], dates[i])
 
     def testMultiplePages(self):
-        scraper = FarpostDictionaryScraper(self.page)
+        scraper = FarpostDictionaryScraper(CatalogPage(self.page, is_url_page=True) )
 
     def testCataloguePageParse(self):
         # now test parse results for inner catalogue pages
@@ -88,7 +88,7 @@ class FarpostCatalog(unittest.TestCase):
         self.assertEqual(len(results), 5*30 + 4)
 
     def testDetailedInfoLoad(self):
-        scraper = FarpostDictionaryScraper(self.page, True)
+        scraper = FarpostDictionaryScraper(CatalogPage(self.page, is_url_page=True), True)
         for ad in scraper.ads:
             logging.info(ad)
             self.assertIsNotNone(ad['email'])
@@ -107,7 +107,7 @@ class FarpostCatalog(unittest.TestCase):
         page = CatalogPage('http://www.vl.ru/spravochnik', request='аутсорсинг')
         self.assertTrue(page.num_pages > 1)
 
-        scraper = FarpostDictionaryScraper(page.page)
+        scraper = FarpostDictionaryScraper(CatalogPage(page.page, is_url_page=True) )
         item_page = BasePage(scraper.ads[0]['catalogURL'])
         text = str(BeautifulSoup(item_page.page, 'html.parser').get_text())
         s = re.findall('аутсорсинг',

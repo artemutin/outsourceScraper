@@ -18,7 +18,7 @@ class GisCatalog(unittest.TestCase):
 
     def testStatic(self):
         # created scraper from preloaded page
-        scraper = GisDictionaryScraper(self.page, 'Хабаровск', 27)
+        scraper = GisDictionaryScraper(CatalogPage(self.page, is_url_page=True), 'Хабаровск', 27)
         ad_list = scraper.ads
         # read all ads from page
         self.assertEqual(len(ad_list), 12)
@@ -38,7 +38,7 @@ class GisCatalog(unittest.TestCase):
 
     def testDetailedInfoLoad(self):
         # scrape of detailed info
-        scraper = GisDictionaryScraper(self.page, 'Хабаровск', 27, True)
+        scraper = GisDictionaryScraper(CatalogPage(self.page, is_url_page=True) , 'Хабаровск', 27, True)
         for ad in scraper.ads:
             logging.info(ad)
             print("IN")
@@ -46,7 +46,7 @@ class GisCatalog(unittest.TestCase):
             self.assertIsNotNone(ad['email'])
             self.assertTrue(ad['email'] == '')
             self.assertIsNotNone(ad['phone'])
-            self.assertTrue(ad['phone'] == '' or re.match(r'[\d\ \(\)\+]+', ad['phone']))
+            self.assertTrue(ad['phone'] == '' or re.match(r'[\d \(\)\+]+', ad['phone']))
             self.assertIsNotNone(ad['site'])
             self.assertTrue(ad['site'] == '' or re.search(r'http', ad['site']))
             if 'promoted' in ad.keys():
