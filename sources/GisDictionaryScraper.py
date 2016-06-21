@@ -5,6 +5,7 @@ from functools import partial
 from math import ceil
 from urllib.request import unquote
 import logging
+import concurrent.futures as Fut
 
 from sources.Page import BasePage
 from sources.utils import cities
@@ -39,8 +40,6 @@ class GisDictionaryScraper:
             try:
                 d = dict()
 
-                find = partial(search, ad)
-
                 info = search(ad, "miniCard__headerTitle", 'h3')
                 d['firmTitle'] = tostr(info.a.string)
                 d['catalogURL'] = tostr(info.a['href'])
@@ -68,20 +67,28 @@ class GisDictionaryScraper:
 
     def __scrape_details(self)->None:
         logging.info('Started scraping detailed ads: url={}'.format(self._url))
-        for ad in self._ads:
+        with Fut.ThreadPoolExecutor(3) as executor:
             try:
-                page = BasePage(ad['catalogURL'])
-                soup = BeautifulSoup(page.page, 'html.parser')
-                if ad.get('promoted', False):
-                    page = BasePage(soup.find('a', class_='firmCard__adsText')['href'])
-                    soup = BeautifulSoup(page.page, 'html.parser')
-                    ad['firmAdvertisement'] = soup.find('div', class_='articleCard__content').get_text()
-
-                ad.update(catalogue_page_parse(soup))
+                self._ads = executor.map(scrape_details_mapper, self._ads, timeout=15)
             except Exception as e:
-                logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
+                logging.error("Error in concurrent scrape: {}".format(str(e)))
 
         logging.info('Finished scraping detailed ads: url={}'.format(self._url))
+
+
+def scrape_details_mapper(ad: dict)->dict:
+    try:
+        page = BasePage(ad['catalogURL'])
+        soup = BeautifulSoup(page.page, 'html.parser')
+        if ad.get('promoted', False):
+            page = BasePage(soup.find('a', class_='firmCard__adsText')['href'])
+            soup = BeautifulSoup(page.page, 'html.parser')
+            ad['firmAdvertisement'] = soup.find('div', class_='articleCard__content').get_text()
+
+        ad.update(catalogue_page_parse(soup))
+        return ad
+    except Exception as e:
+        logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
 
 
 def search(soup: BeautifulSoup, class_: str, elem='div'):
@@ -109,7 +116,7 @@ def catalogue_page_parse(page_soup):
     d['email'] = ''
     try:
         d['site'] = tostr(page_soup.find('a', class_='link contact__linkText')['href'])
-    except AttributeError:
+    except Exception:
         d['site'] = ''
 
     return d
@@ -133,6 +140,7 @@ class CatalogPage(BasePage):
             for (ru, en) in cities.items():
                 if en == city:
                     self.city = ru
+                    break
         else:
             self.page = url
             self.url = None

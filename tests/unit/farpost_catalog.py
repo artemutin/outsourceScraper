@@ -86,7 +86,7 @@ class FarpostCatalog(unittest.TestCase):
         results = scrape_catalog('vl', category='Бухгалтерия', city='Владивосток')
 
         # ALERT: this test is unstable by definition
-        self.assertEqual(len(results), 7*30 + 12)
+        self.assertEqual(len(results), 7*30 + 11)
         results = scrape_catalog('vl', category='Бухгалтерия', city='Хабаровск')
 
         # ALERT: this test is unstable by definition

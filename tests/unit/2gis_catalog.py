@@ -7,6 +7,7 @@ from sources.Catalog import scrape_catalog
 from datetime import date
 import re
 import logging
+import sys
 
 
 class GisCatalog(unittest.TestCase):
@@ -14,6 +15,13 @@ class GisCatalog(unittest.TestCase):
         chdir(path[0])
         f = open("../static/Карта Хабаровска_ улицы, дома и организации города — 2ГИС.html")
         self.page = f.read()
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s %(message)s')
+        ch.setFormatter(formatter)
+        root.addHandler(ch)
         f.close()
 
     def testStatic(self):
@@ -51,6 +59,19 @@ class GisCatalog(unittest.TestCase):
             self.assertTrue(ad['site'] == '' or re.search(r'http', ad['site']))
             if 'promoted' in ad.keys():
                 self.assertIsNotNone(len(ad['firmAdvertisement']))
+
+    def testDetailedPageScrape(self):
+        page = BasePage('http://2gis.ru/khabarovsk/firm/4926340373421638?queryState=center%2F135.119353%2C48.474875%2Fzoom%2F17 ')
+        ad = catalogue_page_parse(BeautifulSoup(page.page, 'html.parser'))
+        self.assertIsNotNone(ad['email'])
+        self.assertTrue(ad['email'] == '')
+        self.assertIsNotNone(ad['phone'])
+        self.assertTrue(ad['phone'] == '' or re.match(r'[\d \(\)\+]+', ad['phone']))
+        self.assertIsNotNone(ad['site'])
+        self.assertTrue(ad['site'] == '' or re.search(r'http', ad['site']))
+        if 'promoted' in ad.keys():
+            self.assertIsNotNone(len(ad['firmAdvertisement']))
+
 
     def testCatalogPage(self):
         # fake local page

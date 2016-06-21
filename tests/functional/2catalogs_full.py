@@ -7,13 +7,6 @@ from sources.Catalog import full_scrape
 
 class FullScrape(unittest.TestCase):
     def testIt(self):
-        root = logging.getLogger()
-        root.setLevel(logging.DEBUG)
-        ch = logging.StreamHandler(sys.stdout)
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s %(message)s')
-        ch.setFormatter(formatter)
-        root.addHandler(ch)
 
         log_name = 'FullScrape.log'
         ch = logging.StreamHandler()

@@ -6,26 +6,28 @@ from typing import List
 from re import sub
 from functools import partial, reduce
 import concurrent.futures as fut
+from math import inf
 
-from sources.utils import catalogs, cities
+from sources.utils import catalogs, cities, cities_to_region
 
 
-def for_fut(Sc, city, page):
+def for_fut(Sc, city, num_pages, page):
     ads = []
     i = 1
-    while i !=2:
+    while i <= num_pages:
         info('parsing page {}'.format(i))
-        scraper = Sc(page=page, city=city, region=27)
+        region = cities_to_region.get(city, 00)
+        scraper = Sc(page=page, city=city, region=region)
         # print(page.page)
         ads.extend(scraper.ads)
-        #page = page.go_next()
+        page = page.go_next()
         i += 1
         if not page: break
 
     return ads
 
 
-def scrape_catalog(catalog: str, category: str, city: str)->List[dict]:
+def scrape_catalog(catalog: str, category: str, city: str, num_pages: int = inf)->List[dict]:
     if catalog == 'vl':
         urls = catalogs.get(catalog).get(category)
         if city == 'Хабаровск':
@@ -38,9 +40,14 @@ def scrape_catalog(catalog: str, category: str, city: str)->List[dict]:
         Sc = partial(G.GisDictionaryScraper, scrape_details=True)
 
     ads = []
-    with fut.ThreadPoolExecutor(max_workers=4) as executor:
+    max_workers = 3
+    if catalog == 'vl':
+        max_workers = 15
+    elif catalog == '2gis':
+        max_workers = 3
+    with fut.ThreadPoolExecutor(max_workers=max_workers) as executor:
         ads = executor.map(
-            partial(for_fut, Sc, city),
+            partial(for_fut, Sc, city, num_pages),
             pages
         )
         ads = reduce(lambda x, y: x+y, list(ads) )
@@ -48,7 +55,11 @@ def scrape_catalog(catalog: str, category: str, city: str)->List[dict]:
 
 
 def unzip_dict(d: dict):
-    date = d.get('renewDate', None)
+    try:
+        date = d.get('renewDate', None)
+    except Exception as e:
+        print(e)
+
     if date:
         d['renewDate'] = date.isoformat()
 
@@ -62,17 +73,19 @@ def unzip_dict(d: dict):
 
 def full_scrape(out_file: str)->None:
     with open(out_file, 'w') as csvfile:
-        field_names = ['firmTitle', 'catalogURL', 'labeledCategory', 'category', 'firmShortDesc', 'site',
+        field_names = ['firmTitle', 'catalogURL', 'catalog', 'labeledCategory', 'category', 'firmShortDesc', 'site',
                        'renewDate', 'clicks', 'promoted', 'firmAdvertisement', 'phone', 'email', 'region', 'city', 'rest']
         writer = csv.DictWriter(csvfile, field_names)
         writer.writeheader()
         # Farpost scrape
+
         for cat in catalogs['vl']:
             for city in ['Владивосток', 'Хабаровск']:
                 ads = list(scrape_catalog('vl', cat, city))
+                ads = list(filter(lambda x: x is not None, ads))
                 for ad in ads:
                     ad = unzip_dict(ad)
-                    ad.update({'category': cat})
+                    ad.update({'category': cat, 'catalog': 'vl'})
                     if city == 'Хабаровск':
                         ad.update({'region': 27})
 
@@ -80,13 +93,14 @@ def full_scrape(out_file: str)->None:
 
         # 2gis
 
-        for cat in catalogs['vl']:
+        for cat in catalogs['2gis']:
+        # cat = 'IT'
             for city in ['Владивосток', 'Хабаровск']:
-                ads = list(scrape_catalog('vl', cat, city))
+                ads = list(scrape_catalog('2gis', cat, city))
+                ads = list(filter(lambda x: x is not None, ads))
+
                 for ad in ads:
                     ad = unzip_dict(ad)
-                    ad.update({'category': cat})
-                    if city == 'Хабаровск':
-                        ad.update({'region': 27})
+                    ad.update({'category': cat, 'catalog': '2gis'})
 
                 writer.writerows(ads)

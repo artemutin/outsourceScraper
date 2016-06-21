@@ -3,6 +3,7 @@ from re import split
 from datetime import date
 from functools import partial
 import concurrent.futures as Fut
+from sources.utils import cities_to_region
 import logging
 
 from sources.Page import BasePage
@@ -108,7 +109,8 @@ def date_parse(datestr):
 
 def adress_parse(address):
     s = split(r',', address)
-    return {'region': 25, 'city': s[0], 'rest': ','.join(s[1:])}
+    region = cities_to_region.get(s[0], 25)
+    return {'region': region, 'city': s[0], 'rest': ','.join(s[1:])}
 
 
 def catalogue_page_parse(page_soup):

@@ -1,3 +1,7 @@
+import logging
+import sys
+
+
 catalogs = {
     'vl':   {'Бухгалтерия': ['http://www.vl.ru/business/services-for-business/accountancy'],
              'Экономические': ['http://www.vl.ru/business/services-for-business/consulting-audit?search=аудит',
@@ -8,11 +12,11 @@ catalogs = {
              'IT': ['http://www.vl.ru/it-computers?search=аутсорсинг',
                     'http://www.vl.ru/it-computers?search=администрирование']
              },
-    '2gis': {'Бухгалтерия': ['search/Бухгалтерские%20услуги/'],
-             'Экономические': ['search/Управленческий%20консалтинг/', 'search/Аудиторские%20услуги/'],
-             'Логистика': ['search/Услуги%20складского%20хранения/', 'search/Экспедирование%20грузов/',
-                           'search/Таможенное%20оформление/'],
-             'IT': ['search/Услуги%20системного%20администрирования/', 'search/Автоматизация%20бизнес-процессов/']}
+    '2gis': {'Бухгалтерия': ['search/Бухгалтерские%20услуги'],
+             'Экономические': ['search/Управленческий%20консалтинг', 'search/Аудиторские%20услуги'],
+             'Логистика': ['search/Услуги%20складского%20хранения', 'search/Экспедирование%20грузов',
+                           'search/Таможенное%20оформление'],
+             'IT': ['search/Услуги%20системного%20администрирования', 'search/Автоматизация%20бизнес-процессов']}
 }
 
 cities = {
@@ -38,3 +42,13 @@ cities_to_region = {
     'Якутск': 14,
     'Петропавловск-Камчатский': 41
 }
+
+
+def setupStdoutLog():
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s %(message)s')
+    ch.setFormatter(formatter)
+    root.addHandler(ch)
