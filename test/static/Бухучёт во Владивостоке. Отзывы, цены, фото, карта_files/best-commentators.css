@@ -1,0 +1,103 @@
+.commentsvlru-widget.best-commentators {
+	background-color: white;
+	width: 223px;
+	border: 1px solid #d8d8d8;
+	padding-left: 10px;
+	padding-right: 5px;
+}
+
+.commentsvlru-widget.best-commentators .title {
+	font-size: 18px;
+	margin-top: 10px;
+	margin-bottom: 5px;
+}
+
+.commentsvlru-widget.best-commentators .help {
+	margin-bottom: 10px;
+}
+
+.commentsvlru-widget.best-commentators .commentator {
+	margin-bottom: 18px;
+}
+
+.commentsvlru-widget.best-commentators .commentator > .cmt-avatar {
+	float: left;
+	margin-right: 15px;
+	width: 50px;
+	height: 50px;
+}
+
+.commentsvlru-widget.best-commentators .cmt-avatar img {
+	width: 50px;
+	height: 50px;
+
+}
+
+.commentsvlru-widget.best-commentators .info {
+	width: 155px;
+	display: inline-block;
+}
+
+.commentsvlru-widget.best-commentators .info .name {
+	overflow: hidden;
+	font-size: 14px;
+}
+.commentsvlru-widget.best-commentators .info .name:after {
+	content: '.';
+	display: block;
+	overflow: hidden;
+	visibility: hidden;
+	font-size: 0;
+	line-height: 0;
+	width: 0;
+	height: 0;
+}
+
+.commentsvlru-widget.best-commentators .star-rating {
+	display: inline-block;
+	height: 18px;
+	opacity: 1;
+	position: relative;
+	width: 90px;
+}
+
+.commentsvlru-widget.best-commentators .star-rating div {
+	background: url(../../images/catalog/stars.png) no-repeat;
+	background-position: 0 0;
+	display: block;
+	height: 18px;
+	left: 0;
+	margin: 0;
+	position: absolute;
+	top: 0;
+	width: 90px;
+}
+
+.commentsvlru-widget.best-commentators .star-rating .inactive {
+	background-position: 0 -20px;
+}
+
+.commentsvlru-widget.best-commentators .user-avatar.default {
+	width: 50px;
+	height: 50px;
+	background: url('../../images/catalog/people.png') no-repeat;
+}
+
+.commentsvlru-widget.best-commentators .amount {
+	padding-top: 2px;
+	color: #b9b9b9;
+}
+
+/* профили */
+.commentsvlru-widget.best-commentators .cmt-avatar .name.cmt-profile__link.user-avatar {
+	border-bottom: none;
+}
+
+.commentsvlru-widget.best-commentators .name.cmt-profile__link {
+	color: #4A90E2;
+	border-bottom: 1px dotted #4A90E2;
+	cursor: pointer;
+}
+.commentsvlru-widget.best-commentators .cmt-profile__link:hover {
+	border-bottom-color: transparent;
+}
