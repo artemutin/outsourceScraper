@@ -4,6 +4,7 @@ from re import split
 from math import ceil
 from urllib.request import unquote
 import logging
+from re import match, sub
 
 from sources.Page import BasePage
 from sources.utils import cities
@@ -78,6 +79,8 @@ def catalogue_page_parse(page_soup):
     d['email'] = ''
     try:
         d['site'] = tostr(page_soup.find('a', class_='link contact__linkText')['href'])
+        if match(r'http://link\.2gis.*',  d['site']):
+            d['site'] = match(r'.*\?(.*)', d['site']).group(1)
     except Exception:
         d['site'] = ''
 
