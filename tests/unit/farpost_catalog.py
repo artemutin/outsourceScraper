@@ -85,14 +85,14 @@ class FarpostCatalog(unittest.TestCase):
     def testfullCatalogScrape(self):
         logging.info('IN test')
         # ask to parse all catalogue
-        results = scrape_catalog('vl', category='Бухгалтерия', city='Владивосток', num_pages=1)
+        results = scrape_catalog('vl', category='Бухгалтерия', city='Владивосток', num_pages=2)
 
         # ALERT: this test is unstable by definition
-        self.assertEqual(len(results), 30)
-        results = scrape_catalog('vl', category='Бухгалтерия', city='Хабаровск', num_pages=1)
+        self.assertEqual(len(results), 60)
+        results = scrape_catalog('vl', category='Бухгалтерия', city='Хабаровск', num_pages=2)
 
         # ALERT: this test is unstable by definition
-        self.assertEqual(len(results), 30)
+        self.assertEqual(len(results), 60)
 
     def testDetailedInfoLoad(self):
         scraper = FarpostDictionaryScraper(CatalogPage(self.page, is_url_page=True), True)

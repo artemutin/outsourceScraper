@@ -3,7 +3,7 @@ from re import split
 from datetime import date
 from functools import partial
 from sources.utils import cities_to_region
-from sources.Scraper import Scraper
+from sources.Scraper import Scraper, tostr, toint, search
 import logging
 
 from sources.Page import BasePage
@@ -59,21 +59,6 @@ class FarpostDictionaryScraper(Scraper):
             return ad
         except Exception as e:
             logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
-
-
-def search(soup: BeautifulSoup, class_: str):
-    return soup.find('div', class_)
-
-
-def tostr(s):
-    return str(s).strip('\n\t\ ')
-
-
-def toint(s):
-    if s:
-        return int(s)
-    else:
-        return None
 
 
 def date_parse(datestr):

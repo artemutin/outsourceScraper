@@ -1,109 +1,71 @@
 from bs4 import BeautifulSoup
 from typing import List
 from re import split
-from functools import partial
 from math import ceil
 from urllib.request import unquote
 import logging
-import concurrent.futures as Fut
 
 from sources.Page import BasePage
 from sources.utils import cities
+from sources.Scraper import Scraper, tostr, toint, search
 
 
 class CatalogPage(BasePage):
     pass
 
 
-class GisDictionaryScraper:
+class GisDictionaryScraper(Scraper):
 
     def __init__(self, page: CatalogPage, city: str, region: int, scrape_details = False ):
-        self.soup = BeautifulSoup(page.page, 'html.parser')
-        self._ads = get_empty_dictlist()
-        self.scrape_details = scrape_details
         self._city = city
         self._region = region
-        self._url = page.url
+        super().__init__(page, scrape_details, num_threads=3)
 
-    @property
-    def ads(self)->List[dict]:
-        if self._ads is None:
-            self.__read_ads()
-            if self.scrape_details:
-                self.__scrape_details()
-        return self._ads
+    def all_ads(self):
+        return self.soup.find_all("article", class_="miniCard")
 
-    def __read_ads(self)->None:
-        self._ads = []
-        logging.info('Started scraping ads: url={}'.format(self._url))
-        for ad in self.soup.find_all("article", class_="miniCard"):
-            try:
-                d = dict()
+    def scrape_ad(self, ad):
+        try:
+            d = dict()
 
-                info = search(ad, "miniCard__headerTitle", 'h3')
-                d['firmTitle'] = tostr(info.a.string)
-                d['catalogURL'] = tostr(info.a['href'])
-                d['renewDate'] = None
-                d['labeledCategory'] = None
+            info = search(ad, "miniCard__headerTitle", 'h3')
+            d['firmTitle'] = tostr(info.a.string)
+            d['catalogURL'] = tostr(info.a['href'])
+            d['renewDate'] = None
+            d['labeledCategory'] = None
 
-                d['renewDate'] = None
+            d['renewDate'] = None
 
-                info = search(ad, "miniCard__micro")
-                if info:
-                    d['firmShortDesc'] = tostr(info.string)
-                else:
-                    d['firmShortDesc'] = ''
-                info = search(ad, "miniCard__address", 'span')
-                d['address'] = {'region': self._region, 'city': self._city, 'rest': tostr(info.string) }
+            info = search(ad, "miniCard__micro")
+            if info:
+                d['firmShortDesc'] = tostr(info.string)
+            else:
+                d['firmShortDesc'] = ''
+            info = search(ad, "miniCard__address", 'span')
+            d['address'] = {'region': self._region, 'city': self._city, 'rest': tostr(info.string) }
 
-                if ad.find('div', attrs = {'data-adv': 'реклама'}):
-                    d['promoted'] = True
+            if ad.find('div', attrs={'data-adv': 'реклама'}):
+                d['promoted'] = True
 
-                self._ads.append(d)
-            except Exception as e:
-                logging.error('Scraping of url={} failed with {}'.format( self._url, str(e)) )
+            return d
+        except Exception as e:
+            logging.error('Scraping of url={} failed with {}'.format(self.url, str(e)) )
+            return None
 
-        logging.info('Finished scraping ads: url={}'.format(self._url))
-
-    def __scrape_details(self)->None:
-        logging.info('Started scraping detailed ads: url={}'.format(self._url))
-        with Fut.ThreadPoolExecutor(3) as executor:
-            try:
-                self._ads = executor.map(scrape_details_mapper, self._ads, timeout=15)
-            except Exception as e:
-                logging.error("Error in concurrent scrape: {}".format(str(e)))
-
-        logging.info('Finished scraping detailed ads: url={}'.format(self._url))
-
-
-def scrape_details_mapper(ad: dict)->dict:
-    try:
-        page = BasePage(ad['catalogURL'])
-        soup = BeautifulSoup(page.page, 'html.parser')
-        if ad.get('promoted', False):
-            page = BasePage(soup.find('a', class_='firmCard__adsText')['href'])
+    def scrape_details_mapper(self, ad: dict) -> dict:
+        try:
+            page = BasePage(ad['catalogURL'])
             soup = BeautifulSoup(page.page, 'html.parser')
-            ad['firmAdvertisement'] = soup.find('div', class_='articleCard__content').get_text()
+            if ad.get('promoted', False):
+                page = BasePage(soup.find('a', class_='firmCard__adsText')['href'])
+                soup = BeautifulSoup(page.page, 'html.parser')
+                ad['firmAdvertisement'] = soup.find('div', class_='articleCard__content').get_text()
 
-        ad.update(catalogue_page_parse(soup))
-        return ad
-    except Exception as e:
-        logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
-
-
-def search(soup: BeautifulSoup, class_: str, elem='div'):
-    return soup.find(elem, class_)
-
-
-def tostr(s):
-    return str(s).strip('\n\t\ ').replace(u'\xa0', u' ')
-
-
-def toint(s):
-    if s:
-        return int(s)
-    else:
-        return None
+            ad.update(catalogue_page_parse(soup))
+            return ad
+        except Exception as e:
+            logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
+            return None
 
 
 def catalogue_page_parse(page_soup):
@@ -120,10 +82,6 @@ def catalogue_page_parse(page_soup):
         d['site'] = ''
 
     return d
-
-
-def get_empty_dictlist()->List[dict]:
-    return None
 
 
 class CatalogPage(BasePage):

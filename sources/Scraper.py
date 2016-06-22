@@ -7,10 +7,11 @@ from functools import partial
 
 class Scraper:
 
-    def __init__(self, page: BasePage, scrape_details=False, **kwargs):
+    def __init__(self, page: BasePage, scrape_details=False, num_threads=15, **kwargs):
         self.soup = BeautifulSoup(page.page, 'html.parser')
         self.scrape_details = scrape_details
         self.url = page.url
+        self.num_threads = num_threads
         self.load_ads()
 
     def load_ads(self):
@@ -39,9 +40,21 @@ class Scraper:
 
     def __scrape_details(self)->None:
         logging.info('Started scraping detailed ads: url={}'.format(self.url))
-        with Fut.ThreadPoolExecutor(15) as executor:
+        with Fut.ThreadPoolExecutor(self.num_threads) as executor:
             self.ads = executor.map(self.scrape_details_mapper, self.ads)
 
         logging.info('Finished scraping detailed ads: url={}'.format(self.url))
 
 
+def search(soup: BeautifulSoup, class_: str, elem='div'):
+    return soup.find(elem, class_)
+
+
+def tostr(s):
+    return str(s).strip('\n\t\ ').replace(u'\xa0', u' ')
+
+def toint(s):
+    if s:
+        return int(s)
+    else:
+        return None

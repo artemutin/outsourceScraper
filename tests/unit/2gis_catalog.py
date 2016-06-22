@@ -72,7 +72,6 @@ class GisCatalog(unittest.TestCase):
         if 'promoted' in ad.keys():
             self.assertIsNotNone(len(ad['firmAdvertisement']))
 
-
     def testCatalogPage(self):
         # fake local page
         page = CatalogPage(self.page, is_url_page=True)
@@ -97,8 +96,8 @@ class GisCatalog(unittest.TestCase):
     def testfullCatalogScrape(self):
         logging.info('IN test')
         # ask to parse all catalogue
-        results = scrape_catalog('2gis', category='Бухгалтерия', city='Хабаровск')
+        results = scrape_catalog('2gis', category='Бухгалтерия', city='Хабаровск', num_pages=2)
 
         # ALERT: this test is unstable by definition
-        self.assertEqual(len(results), 152)
+        self.assertEqual(len(results), 24)
 
