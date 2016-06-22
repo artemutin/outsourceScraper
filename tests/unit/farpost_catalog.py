@@ -7,6 +7,7 @@ from sources.Catalog import scrape_catalog
 from datetime import date
 import re
 import logging
+from sources.utils import setupStdoutLog
 
 
 class FarpostCatalog(unittest.TestCase):
@@ -16,6 +17,7 @@ class FarpostCatalog(unittest.TestCase):
         f = open("../static/Бухучёт во Владивостоке. Отзывы, цены, фото, карта.html")
         self.page = f.read()
         f.close()
+        setupStdoutLog()
 
     def testStatic(self):
         # created scraper from preloaded page
@@ -83,14 +85,14 @@ class FarpostCatalog(unittest.TestCase):
     def testfullCatalogScrape(self):
         logging.info('IN test')
         # ask to parse all catalogue
-        results = scrape_catalog('vl', category='Бухгалтерия', city='Владивосток')
+        results = scrape_catalog('vl', category='Бухгалтерия', city='Владивосток', num_pages=1)
 
         # ALERT: this test is unstable by definition
-        self.assertEqual(len(results), 7*30 + 11)
-        results = scrape_catalog('vl', category='Бухгалтерия', city='Хабаровск')
+        self.assertEqual(len(results), 30)
+        results = scrape_catalog('vl', category='Бухгалтерия', city='Хабаровск', num_pages=1)
 
         # ALERT: this test is unstable by definition
-        self.assertEqual(len(results), 6*30 + 12)
+        self.assertEqual(len(results), 30)
 
     def testDetailedInfoLoad(self):
         scraper = FarpostDictionaryScraper(CatalogPage(self.page, is_url_page=True), True)

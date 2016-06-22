@@ -2,8 +2,8 @@ from bs4 import BeautifulSoup
 from re import split
 from datetime import date
 from functools import partial
-import concurrent.futures as Fut
 from sources.utils import cities_to_region
+from sources.Scraper import Scraper
 import logging
 
 from sources.Page import BasePage
@@ -13,76 +13,52 @@ class CatalogPage(BasePage):
     pass
 
 
-class FarpostDictionaryScraper:
+class FarpostDictionaryScraper(Scraper):
 
-    def __init__(self, page: CatalogPage, scrape_details = False, **kwargs):
-        self.soup = BeautifulSoup(page.page, 'html.parser')
-        self._ads = None
-        self.scrape_details = scrape_details
-        self._url = page.url
+    def all_ads(self):
+        return self.soup.find_all("div", class_="company")
 
-    @property
-    def ads(self):
-        if self._ads is None:
-            self.__read_ads()
-            if self.scrape_details:
-                self.__scrape_details()
-        return self._ads
+    def scrape_ad(self, ad):
+        try:
+            d = dict()
+            find = partial(search, ad)
 
+            info = find("company__info")
+            if not info:
+                logging.warning('Could not find company info')
+            d['firmTitle'] = tostr(info.header.h4.a.string)
+            d['catalogURL'] = tostr(info.header.h4.a['href'])
+            act_type = find("company__activity-type")
+            if act_type:
+                d['labeledCategory'] = tostr(act_type.string)
 
-    def __read_ads(self)->None:
-        self._ads = []
-        logging.info('Started scraping detailed ads: url={}'.format(self._url))
-        for ad in self.soup.find_all("div", class_="company"):
-            try:
-                d = dict()
-                find = partial(search, ad)
+            info = find("company__side")
+            d['renewDate'] = date_parse(info.div.string)
 
-                info = find("company__info")
-                if not info:
-                    logging.warning('Could not find company info')
-                d['firmTitle'] = tostr(info.header.h4.a.string)
-                d['catalogURL'] = tostr(info.header.h4.a['href'])
-                act_type = find("company__activity-type")
-                if act_type:
-                    d['labeledCategory'] = tostr(act_type.string)
+            info = find("company__details")
+            if info.div:
+                d['firmShortDesc'] = tostr(info.div.string)
+            d['address'] = adress_parse(tostr(find('contacts').div.get_text()))
 
-                info = find("company__side")
-                d['renewDate'] = date_parse(info.div.string)
+            info = ad.find('span', class_='count')
+            if info:
+                d['clicks'] = toint(tostr(info.string))
+            else:
+                d['clicks'] = None
 
-                info = find("company__details")
-                if info.div:
-                    d['firmShortDesc'] = tostr(info.div.string)
-                d['address'] = adress_parse(tostr(find('contacts').div.get_text()))
+            return d
+        except Exception as e:
+            logging.error('Scraping of url={} failed with {}'.format(self.url, str(e)))
+            return None
 
-                info = ad.find('span', class_='count')
-                if info:
-                    d['clicks'] = toint(tostr(info.string))
-                else:
-                    d['clicks'] = None
-
-                self._ads.append(d)
-            except Exception as e:
-                logging.error('Scraping of url={} failed with {}'.format(self._url, str(e)))
-
-        logging.info('Finished scraping ads: url={}'.format(self._url))
-
-    def __scrape_details(self):
-        logging.info('Started scraping detailed ads: url={}'.format(self._url))
-        with Fut.ThreadPoolExecutor(15) as executor:
-            self._ads = executor.map(scrape_details_mapper, self._ads)
-
-        logging.info('Finished scraping detailed ads: url={}'.format(self._url))
-
-
-def scrape_details_mapper(ad):
-    try:
-        page = BasePage(ad['catalogURL'])
-        soup = BeautifulSoup(page.page, 'html.parser')
-        ad.update(catalogue_page_parse(soup))
-        return ad
-    except Exception as e:
-        logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
+    def scrape_details_mapper(self, ad):
+        try:
+            page = BasePage(ad['catalogURL'])
+            soup = BeautifulSoup(page.page, 'html.parser')
+            ad.update(catalogue_page_parse(soup))
+            return ad
+        except Exception as e:
+            logging.error('Scraping of details for url={} failed with {}'.format(ad['catalogURL'], str(e)))
 
 
 def search(soup: BeautifulSoup, class_: str):
