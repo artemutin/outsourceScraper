@@ -1,5 +1,7 @@
 import logging
 import sys
+import datetime as dt
+import os
 
 
 catalogs = {
@@ -48,13 +50,16 @@ def setupLog(logToFile = False, path='.'):
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
+    ch.setLevel(logging.WARNING)
     formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
 
     ch.setFormatter(formatter)
     root.addHandler(ch)
     if logToFile:
-        fileHandler = logging.FileHandler(path + "/log-.log")
+        fileHandler = logging.FileHandler(os.path.join(path,
+                                          r"log-{}.log".format(dt.datetime.now().strftime('%d-%m-%H-%M')))
+                                        )
+        fileHandler.setLevel(logging.DEBUG)
         fileHandler.setFormatter(formatter)
         root.addHandler(fileHandler)
     logging.getLogger("requests").setLevel(logging.WARNING)

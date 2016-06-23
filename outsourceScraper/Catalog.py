@@ -1,6 +1,6 @@
 import outsourceScraper.FarpostDictionaryScraper as F
 import outsourceScraper.GisDictionaryScraper as G
-import csv
+import unicodecsv as csv
 from logging import info
 from typing import List
 from re import sub
@@ -30,7 +30,7 @@ def for_fut(Sc, city, num_pages, page):
     return ads
 
 
-def scrape_catalog(catalog: str, category: str, city: str, num_pages: int = inf)->List[dict]:
+def scrape_catalog(catalog: str, category: str, city: str, max_workers=10, num_pages: int = inf)->List[dict]:
     if catalog == 'vl':
         urls = catalogs.get(catalog).get(category)
         if city == 'Хабаровск':
@@ -43,11 +43,10 @@ def scrape_catalog(catalog: str, category: str, city: str, num_pages: int = inf)
         Sc = partial(G.GisDictionaryScraper, scrape_details=True)
 
     ads = []
-    max_workers = 3
     if catalog == 'vl':
-        max_workers = 10
+        max_workers = min(10, max_workers)
     elif catalog == '2gis':
-        max_workers = 3
+        max_workers = min(3, max_workers)
     with fut.ThreadPoolExecutor(max_workers=max_workers) as executor:
         ads = executor.map(
             partial(for_fut, Sc, city, num_pages),
@@ -71,11 +70,15 @@ def unzip_dict(d: dict):
         d.update(address)
         del d['address']
 
+    # for (key, val) in d.items():
+    #   if isinstance(val, str):
+    #        d[key] = val.decode('utf8')
+
     return d
 
 
-def full_scrape(out_file: str)->None:
-    with open(out_file, 'w') as csvfile:
+def full_scrape(out_file: str, max_workers)->None:
+    with open(out_file, 'wb') as csvfile:
         field_names = ['firmTitle', 'catalogURL', 'catalog', 'labeledCategory', 'category', 'firmShortDesc', 'site',
                        'renewDate', 'clicks', 'promoted', 'firmAdvertisement', 'phone', 'email', 'region', 'city', 'rest']
         writer = csv.DictWriter(csvfile, field_names)
@@ -83,8 +86,9 @@ def full_scrape(out_file: str)->None:
         # Farpost scrape
 
         for cat in catalogs['vl']:
+            print('Parsing catalog: *VL*, 2gis...\n Category: {}.'.format(cat), flush=True)
             for city in ['Владивосток', 'Хабаровск']:
-                ads = list(scrape_catalog('vl', cat, city))
+                ads = list(scrape_catalog('vl', cat, city, max_workers))
                 ads = list(filter(lambda x: x is not None, ads))
                 for ad in ads:
                     ad = unzip_dict(ad)
@@ -97,9 +101,9 @@ def full_scrape(out_file: str)->None:
         # 2gis
 
         for cat in catalogs['2gis']:
-        # cat = 'IT'
+            print('Parsing catalog: VL, *2GIS*...\n Category: {}.'.format(cat), flush=True)
             for city in ['Владивосток', 'Хабаровск']:
-                ads = list(scrape_catalog('2gis', cat, city))
+                ads = list(scrape_catalog('2gis', cat, city, max_workers))
                 ads = list(filter(lambda x: x is not None, ads))
 
                 for ad in ads:

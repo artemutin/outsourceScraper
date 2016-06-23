@@ -1,10 +1,9 @@
 from bs4 import BeautifulSoup
 from typing import List
-from re import split
 from math import ceil
 from urllib.request import unquote
 import logging
-from re import match, sub
+from re import match, split
 
 from outsourceScraper.Page import BasePage
 from outsourceScraper.utils import cities
@@ -20,6 +19,19 @@ class GisDictionaryScraper(Scraper):
     def __init__(self, page: CatalogPage, city: str, region: int, scrape_details = False ):
         self._city = city
         self._region = region
+        self.labeledCategory = ''
+        if page.url:
+            splitted_url = split(r'/', page.url)
+            flag = False
+
+            for i in splitted_url:
+                if i == 'search':
+                    flag = True
+                    continue
+                if flag:
+                    self.labeledCategory = i
+                    break
+
         super().__init__(page, scrape_details, num_threads=3)
 
     def all_ads(self):
@@ -33,7 +45,7 @@ class GisDictionaryScraper(Scraper):
             d['firmTitle'] = tostr(info.a.string)
             d['catalogURL'] = tostr(info.a['href'])
             d['renewDate'] = None
-            d['labeledCategory'] = None
+            d['labeledCategory'] = self.labeledCategory
 
             d['renewDate'] = None
 
